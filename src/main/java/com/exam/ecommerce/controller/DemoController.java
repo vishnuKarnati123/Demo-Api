@@ -175,18 +175,18 @@ public class DemoController {
 		return res.getBody();
 	}
 	
-	@GetMapping("/getproduct")
-	public String getproductfromshipment()
-	{
-		 HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		HttpEntity<String> entity=new HttpEntity<>(headers);
-		
-		String url="http://localhost:8080/api/getproduct?productName={productName}";
-	//	UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url).queryParam("productName", "Life");//builder.buildAndExpand().toUri()
-		ResponseEntity<String> res = restTemplate.exchange(url, HttpMethod.GET, entity,String.class,"Life");
-		return res.getBody();
-	}
-	
+	/*
+	 * @GetMapping("/getproduct") public String getproductfromshipment() {
+	 * HttpHeaders headers = new HttpHeaders();
+	 * headers.setContentType(MediaType.APPLICATION_JSON); HttpEntity<String>
+	 * entity=new HttpEntity<>(headers);
+	 * 
+	 * String url="http://localhost:8080/api/getproduct?productName={productName}";
+	 * // UriComponentsBuilder builder =
+	 * UriComponentsBuilder.fromUriString(url).queryParam("productName",
+	 * "Life");//builder.buildAndExpand().toUri() ResponseEntity<String> res =
+	 * restTemplate.exchange(url, HttpMethod.GET, entity,String.class,"Life");
+	 * return res.getBody(); }
+	 */
 }
 
