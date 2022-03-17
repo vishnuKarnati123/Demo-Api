@@ -1,0 +1,20 @@
+
+spring:
+  datasource:
+    name: firstdatabase
+    url: jdbc:postgresql://localhost:5432/firstdatabase
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL81Dialect
+    hibernate:
+      ddl-auto: update
+      
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+  application:
+    name: ecommerceService
