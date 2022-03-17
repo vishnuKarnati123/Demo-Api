@@ -1,11 +1,14 @@
 package com.exam.ecommerce.controller;
 
 
-import org.springframework.http.HttpHeaders;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,20 +20,23 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import com.exam.ecommerce.dto.OrderDetailsDto;
 import com.exam.ecommerce.dto.ProductDto;
 import com.exam.ecommerce.entities.OrderDetails;
 import com.exam.ecommerce.entities.Product;
+import com.exam.ecommerce.feignclient.FeignClientUtil;
 import com.exam.ecommerce.services.DemoServices;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+
 
 @RestController
 @RequestMapping("/demo")
+@RefreshScope
 public class DemoController {
 
 	@Autowired
@@ -106,13 +112,20 @@ public class DemoController {
 	}
 
 	
-	
-	
 	@Autowired
-	RestTemplate restTemplate;
+	private FeignClientUtil feign;	
 	
+	/*
+	 * @Autowired
+	 * 
+	 * @Lazy RestTemplate restTemplate;
+	 */
+	/*
+	 * @Value("${shipmentstatus.url}") private String shipmenturl;
+	 */
+	private static final String ECOMMERCE_SERVICE="ecommerceService";
 	
-	
+	@CircuitBreaker(name=ECOMMERCE_SERVICE, fallbackMethod="getFallBackTrackStatus")
 	@GetMapping("/orderstatus/{orderid}")
 	public String trackStatus(@PathVariable int orderid)
 	{
@@ -124,13 +137,21 @@ public class DemoController {
       HttpEntity<String> entity=new HttpEntity<String>(headers);
 	
 		
-		  return restTemplate.getForObject("http://localhost:8080/api/shipmentstatus/{orderid}", String.class,orderid);
+	// return restTemplate.getForObject(shipmenturl, String.class,orderid);
+      return feign.getShipmentstatus(orderid);
 	
 		
 	}
 	
 	
+	public String getFallBackTrackStatus(Exception e)
+	{
+		return "Shipment status is fall backed";
+	}
 	
+	/*
+	 * @Value("${saveshipmentstatus.url}") private String saveshipmenturl;
+	 */
 	@PostMapping("/savestatus")
 	public String saveStatus(@RequestBody OrderDetailsDto orderDetailsDto) {
 		
@@ -142,8 +163,9 @@ public class DemoController {
 		HttpEntity<OrderDetailsDto> entity = new HttpEntity<>(orderDetailsDto, headers);
 
 		//ResponseEntity<String> res = restTemplate.exchange("http://localhost:8080/api/status", HttpMethod.POST, entity,String.class);
-		return restTemplate.postForObject("http://localhost:8080/api/status",orderDetailsDto,String.class);
+	//	return restTemplate.postForObject(saveshipmenturl,orderDetailsDto,String.class);
 		//return res.getBody();
+		return feign.addShipmentStatus(orderDetailsDto);
 	}
 	@PutMapping("/updatestatus/{orderid}")
 	public String saveStatus(@PathVariable int orderid)
@@ -156,8 +178,9 @@ public class DemoController {
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		HttpEntity<OrderDetailsDto> entity = new HttpEntity<>(orderDetailsDto, headers);
 
-		ResponseEntity<String> res = restTemplate.exchange("http://localhost:8080/api/status", HttpMethod.PUT, entity,String.class);
-		return res.getBody();
+		//ResponseEntity<String> res = restTemplate.exchange("http://SHIPMENTSERVICE/api/status", HttpMethod.PUT, entity,String.class);
+		//return res.getBody();
+		return feign.updateShipmentStatus(orderDetailsDto);
 		}
 		catch(NullPointerException e)
 		{
@@ -171,8 +194,10 @@ public class DemoController {
 	public String deleteStatus(@PathVariable int orderid)
 	{
 		
-		 ResponseEntity<String> res = restTemplate.exchange("http://localhost:8080/api/status/{orderid}", HttpMethod.DELETE,HttpEntity.EMPTY,String.class,orderid);
-		return res.getBody();
+		
+		// ResponseEntity<String> res = restTemplate.exchange("http://SHIPMENTSERVICE/api/status/{orderid}", HttpMethod.DELETE,HttpEntity.EMPTY,String.class,orderid);
+		//return res.getbody();
+		return feign.deleteStatus(orderid);
 	}
 	
 	/*
